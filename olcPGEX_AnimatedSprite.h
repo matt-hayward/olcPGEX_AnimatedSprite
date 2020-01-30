@@ -101,6 +101,7 @@ namespace olc
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
 		std::map<std::string, float> frameDurations;
 		float frameTimer = 0.0f;
+		//float frameDuration = 0.1f;
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
 		float spriteScale = 1.0f;
@@ -208,11 +209,11 @@ namespace olc
 		olc::GFX2D::Transform2D t;
 
 		if (flip == FLIP_MODE::HORIZONTAL) {
-			t.Translate(-((spriteSize.x / 2) * spriteScale), 0);
+			t.Translate(-((spriteSize.x) * spriteScale), 0);
 			t.Scale(-spriteScale, spriteScale);
 		}
 		else if (flip == FLIP_MODE::VERTICAL) {
-			t.Translate(0, -((spriteSize.y / 2) * spriteScale));
+			t.Translate(0, -((spriteSize.y) * spriteScale));
 			t.Scale(spriteScale, -spriteScale);
 		}
 		else {
