@@ -71,10 +71,11 @@ namespace olc
 		void Draw(float fElapsedTime, olc::vf2d position);
 		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
 		void AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations);
+		void AddState(std::string stateName, std::vector<std::string> imagePaths);
+		void AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations);
 		void SetSpriteSize(olc::vi2d size);
 		olc::vi2d GetSpriteSize();
 		void SetSpriteScale(float scale);
-		void SetFrameDuration(float duration);
 
 	protected:
 		olc::Sprite* GetMultiFrame(float fElapsedTime);
@@ -100,8 +101,8 @@ namespace olc
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
 		std::map<std::string, float> frameDurations;
+		const float DEFAULT_FRAME_DURATION = 0.1f;
 		float frameTimer = 0.0f;
-		//float frameDuration = 0.1f;
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
 		float spriteScale = 1.0f;
@@ -166,6 +167,16 @@ namespace olc
 		return state;
 	}
 
+	void AnimatedSprite::AddState(std::string stateName, std::vector<std::string> imgPaths)
+	{
+		AnimatedSprite::AddState(stateName, DEFAULT_FRAME_DURATION, imgPaths);
+	}
+
+	void AnimatedSprite::AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations)
+	{
+		AnimatedSprite::AddState(stateName, DEFAULT_FRAME_DURATION, spriteLocations);
+	}
+
 	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
 	{
 		for (std::string& path : imgPaths) {
@@ -211,12 +222,10 @@ namespace olc
 		if (flip == FLIP_MODE::HORIZONTAL) {
 			t.Translate(-spriteSize.x, 0);
 			t.Scale(-spriteScale, spriteScale);
-		}
-		else if (flip == FLIP_MODE::VERTICAL) {
+		} else if (flip == FLIP_MODE::VERTICAL) {
 			t.Translate(0, -spriteSize.y);
 			t.Scale(spriteScale, -spriteScale);
-		}
-		else {
+		} else {
 			t.Scale(spriteScale, spriteScale);
 		}
 
