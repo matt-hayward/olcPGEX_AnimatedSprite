@@ -209,11 +209,11 @@ namespace olc
 		olc::GFX2D::Transform2D t;
 
 		if (flip == FLIP_MODE::HORIZONTAL) {
-			t.Translate(-((spriteSize.x) * spriteScale), 0);
+			t.Translate(-spriteSize.x, 0);
 			t.Scale(-spriteScale, spriteScale);
 		}
 		else if (flip == FLIP_MODE::VERTICAL) {
-			t.Translate(0, -((spriteSize.y) * spriteScale));
+			t.Translate(0, -spriteSize.y);
 			t.Scale(spriteScale, -spriteScale);
 		}
 		else {
