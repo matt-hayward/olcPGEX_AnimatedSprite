@@ -83,6 +83,7 @@ namespace olc
 
 	public:
 		bool flipped = false;
+		int defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
 		enum class FLIP_MODE {
 			NONE = 0,
 			HORIZONTAL = 1,
@@ -101,7 +102,6 @@ namespace olc
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
 		std::map<std::string, float> frameDurations;
-		const float DEFAULT_FRAME_DURATION = 0.1f;
 		float frameTimer = 0.0f;
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
@@ -169,12 +169,12 @@ namespace olc
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<std::string> imgPaths)
 	{
-		AnimatedSprite::AddState(stateName, DEFAULT_FRAME_DURATION, imgPaths);
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, imgPaths);
 	}
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations)
 	{
-		AnimatedSprite::AddState(stateName, DEFAULT_FRAME_DURATION, spriteLocations);
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, spriteLocations);
 	}
 
 	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
