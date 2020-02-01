@@ -69,6 +69,8 @@ namespace olc
 		void SetState(std::string newState);
 		std::string GetState();
 		void Draw(float fElapsedTime, olc::vf2d position);
+		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
+		void AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations);
 		void AddState(std::string stateName, std::vector<std::string> imagePaths);
 		void AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations);
 		void SetSpriteSize(olc::vi2d size);
@@ -78,9 +80,10 @@ namespace olc
 	protected:
 		olc::Sprite* GetMultiFrame(float fElapsedTime);
 		olc::vi2d GetSingleFrame(float fElapsedTime);
-		
+
 	public:
 		bool flipped = false;
+		int defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
 		enum class FLIP_MODE {
 			NONE = 0,
 			HORIZONTAL = 1,
@@ -98,8 +101,8 @@ namespace olc
 		std::string state;
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
+		std::map<std::string, float> frameDurations;
 		float frameTimer = 0.0f;
-		float frameDuration = 0.1f;
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
 		float spriteScale = 1.0f;
@@ -115,7 +118,7 @@ namespace olc
 	{
 		frameTimer += fElapsedTime;
 
-		if (frameTimer >= frameDuration) {
+		if (frameTimer >= frameDurations[state]) {
 			currentFrame++;
 			frameTimer = 0.0f;
 
@@ -131,7 +134,7 @@ namespace olc
 	{
 		frameTimer += fElapsedTime;
 
-		if (frameTimer >= frameDuration) {
+		if (frameTimer >= frameDurations[state]) {
 			currentFrame++;
 			frameTimer = 0.0f;
 
@@ -147,7 +150,7 @@ namespace olc
 	{
 		if ((mode == SPRITE_MODE::MULTI && multiFrames.find(newState) == multiFrames.end())
 			|| (mode == SPRITE_MODE::SINGLE && singleFrames.find(newState) == singleFrames.end())) {
-			
+
 			std::cout << "Error: State " << newState << " does not exist." << std::endl;
 			return;
 		}
@@ -158,6 +161,7 @@ namespace olc
 		}
 	}
 
+
 	std::string AnimatedSprite::GetState()
 	{
 		return state;
@@ -165,16 +169,30 @@ namespace olc
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<std::string> imgPaths)
 	{
-		for (std::string& path : imgPaths) {
-			multiFrames[stateName].push_back(new olc::Sprite(path));
-		}
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, imgPaths);
 	}
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations)
 	{
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, spriteLocations);
+	}
+
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
+	{
+		for (std::string& path : imgPaths) {
+			multiFrames[stateName].push_back(new olc::Sprite(path));
+		}
+
+		frameDurations[stateName] = frameDuration;
+	}
+
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations)
+	{
 		for (olc::vi2d& location : spriteLocations) {
 			singleFrames[stateName].push_back(location);
 		}
+
+		frameDurations[stateName] = frameDuration;
 	}
 
 	void AnimatedSprite::SetSpriteSize(olc::vi2d size)
@@ -191,7 +209,8 @@ namespace olc
 	{
 		if (scale <= 0.0f) {
 			spriteScale = 1.0f;
-		} else {
+		}
+		else {
 			spriteScale = scale;
 		}
 	}
@@ -201,13 +220,12 @@ namespace olc
 		olc::GFX2D::Transform2D t;
 
 		if (flip == FLIP_MODE::HORIZONTAL) {
-			t.Translate(-((spriteSize.x / 2) * spriteScale), 0);
+			t.Translate(-spriteSize.x, 0);
 			t.Scale(-spriteScale, spriteScale);
 		} else if (flip == FLIP_MODE::VERTICAL) {
-			t.Translate(0, -((spriteSize.y / 2) * spriteScale));
+			t.Translate(0, -spriteSize.y);
 			t.Scale(spriteScale, -spriteScale);
-		}
-		else {
+		} else {
 			t.Scale(spriteScale, spriteScale);
 		}
 
