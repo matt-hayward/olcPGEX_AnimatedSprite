@@ -108,4 +108,4 @@ sprite.flip = olc::AnimatedSprite::FLIP_MODE::NONE; // display original image
 
 ## Contributions
 
-Contributions are more than welcome. They can be in the form of reporting bugs and making feature requests (use GitHub issues for both of these), or PRs for changes.
+Contributions are more than welcome. Please see [CONTRIBUTING.md](https://github.com/matt-hayward/olcPGEX_AnimatedSprite/blob/develop/CONTRIBUTING.md) for more information.

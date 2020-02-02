@@ -3,7 +3,7 @@
 
 	+-------------------------------------------------------------+
 	|         OneLoneCoder Pixel Game Engine Extension            |
-	|                AnimatedSprites - v1.0			              |
+	|                AnimatedSprites - v1.1.0			              |
 	+-------------------------------------------------------------+
 
 	What is this?
@@ -54,6 +54,10 @@
 	Author
 	~~~~~~
 	Matt Hayward aka SaladinAkara
+
+	Contributors
+	~~~~~~~~~~~~
+	0xnicholasc - https://github.com/0xnicholasc
 */
 
 #include "olcPGEX_Graphics2D.h"
