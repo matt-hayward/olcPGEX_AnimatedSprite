@@ -66,15 +66,25 @@ namespace olc
 	class AnimatedSprite : public olc::PGEX
 	{
 	public:
+		// Set current state of sprite
 		void SetState(std::string newState);
+		// Get current sprite state
 		std::string GetState();
+		// Draw sprite
 		void Draw(float fElapsedTime, olc::vf2d position);
+		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration
 		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
+		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration
 		void AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations);
+		// Add state for sprite in SPRITE_MODE::MULTI using the default frameDuration
 		void AddState(std::string stateName, std::vector<std::string> imagePaths);
+		// Add state for sprite in SPRITE_MODE::SINGLE using the default frameDuration
 		void AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations);
+		// Set size of sprite
 		void SetSpriteSize(olc::vi2d size);
+		// Get size of sprite
 		olc::vi2d GetSpriteSize();
+		// Set sprite scale factor
 		void SetSpriteScale(float scale);
 
 	protected:
