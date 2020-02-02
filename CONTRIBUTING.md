@@ -29,7 +29,7 @@ The following code style guidelines should be adhered to:
     - Closing braces should always be on a new line
     - Example:
     ```cpp
-    int foo()
+    void FooBar()
     {
         if (foo) {
             //
