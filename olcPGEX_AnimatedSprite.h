@@ -106,6 +106,7 @@ namespace olc
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
 		float spriteScale = 1.0f;
+		olc::Sprite* placeholder = nullptr;
 	};
 }
 
@@ -198,6 +199,10 @@ namespace olc
 	void AnimatedSprite::SetSpriteSize(olc::vi2d size)
 	{
 		spriteSize = size;
+		if (placeholder != nullptr) {
+			delete placeholder;
+		}
+		placeholder = new olc::Sprite(size.x, size.y);
 	}
 
 	olc::vi2d AnimatedSprite::GetSpriteSize()
@@ -235,12 +240,16 @@ namespace olc
 			olc::GFX2D::DrawSprite(GetMultiFrame(fElapsedTime), t);
 		}
 		else {
-			olc::Sprite* sprite = new olc::Sprite(spriteSize.x, spriteSize.y);
-			pge->SetDrawTarget(sprite);
+			olc::Pixel::Mode currentPixelMode = pge->GetPixelMode();
+			olc::Sprite* currentDrawTarget = pge->GetDrawTarget();
+
+			pge->SetDrawTarget(placeholder);
+			pge->Clear(olc::BLANK);
+			pge->SetPixelMode(olc::Pixel::NORMAL);
 			pge->DrawPartialSprite({ 0, 0 }, spriteSheet, GetSingleFrame(fElapsedTime), spriteSize);
-			pge->SetDrawTarget(nullptr);
-			olc::GFX2D::DrawSprite(sprite, t);
-			delete sprite;
+			pge->SetDrawTarget(currentDrawTarget);
+			pge->SetPixelMode(currentPixelMode);
+			olc::GFX2D::DrawSprite(placeholder, t);
 		}
 	}
 }
