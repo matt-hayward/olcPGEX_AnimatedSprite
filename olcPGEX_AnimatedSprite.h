@@ -3,7 +3,7 @@
 
 	+-------------------------------------------------------------+
 	|         OneLoneCoder Pixel Game Engine Extension            |
-	|                AnimatedSprites - v1.0			              |
+	|                AnimatedSprites - v1.1.0			              |
 	+-------------------------------------------------------------+
 
 	What is this?
@@ -54,6 +54,10 @@
 	Author
 	~~~~~~
 	Matt Hayward aka SaladinAkara
+
+	Contributors
+	~~~~~~~~~~~~
+	0xnicholasc - https://github.com/0xnicholasc
 */
 
 #include "olcPGEX_Graphics2D.h"
@@ -66,21 +70,34 @@ namespace olc
 	class AnimatedSprite : public olc::PGEX
 	{
 	public:
+		// Set current state of sprite
 		void SetState(std::string newState);
+		// Get current sprite state
 		std::string GetState();
+		// Draw sprite
 		void Draw(float fElapsedTime, olc::vf2d position);
+		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration
+		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
+		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration
+		void AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations);
+		// Add state for sprite in SPRITE_MODE::MULTI using the default frameDuration
 		void AddState(std::string stateName, std::vector<std::string> imagePaths);
+		// Add state for sprite in SPRITE_MODE::SINGLE using the default frameDuration
 		void AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations);
+		// Set size of sprite
 		void SetSpriteSize(olc::vi2d size);
+		// Get size of sprite
 		olc::vi2d GetSpriteSize();
+		// Set sprite scale factor
 		void SetSpriteScale(float scale);
 
 	protected:
 		olc::Sprite* GetMultiFrame(float fElapsedTime);
 		olc::vi2d GetSingleFrame(float fElapsedTime);
-		
+
 	public:
 		bool flipped = false;
+		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
 		enum class FLIP_MODE {
 			NONE = 0,
 			HORIZONTAL = 1,
@@ -98,11 +115,12 @@ namespace olc
 		std::string state;
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
+		std::map<std::string, float> frameDurations;
 		float frameTimer = 0.0f;
-		float frameDuration = 0.1f;
 		unsigned int currentFrame;
 		olc::vi2d spriteSize;
 		float spriteScale = 1.0f;
+		olc::Sprite* placeholder = nullptr;
 	};
 }
 
@@ -115,7 +133,7 @@ namespace olc
 	{
 		frameTimer += fElapsedTime;
 
-		if (frameTimer >= frameDuration) {
+		if (frameTimer >= frameDurations[state]) {
 			currentFrame++;
 			frameTimer = 0.0f;
 
@@ -131,7 +149,7 @@ namespace olc
 	{
 		frameTimer += fElapsedTime;
 
-		if (frameTimer >= frameDuration) {
+		if (frameTimer >= frameDurations[state]) {
 			currentFrame++;
 			frameTimer = 0.0f;
 
@@ -147,7 +165,7 @@ namespace olc
 	{
 		if ((mode == SPRITE_MODE::MULTI && multiFrames.find(newState) == multiFrames.end())
 			|| (mode == SPRITE_MODE::SINGLE && singleFrames.find(newState) == singleFrames.end())) {
-			
+
 			std::cout << "Error: State " << newState << " does not exist." << std::endl;
 			return;
 		}
@@ -158,6 +176,7 @@ namespace olc
 		}
 	}
 
+
 	std::string AnimatedSprite::GetState()
 	{
 		return state;
@@ -165,21 +184,39 @@ namespace olc
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<std::string> imgPaths)
 	{
-		for (std::string& path : imgPaths) {
-			multiFrames[stateName].push_back(new olc::Sprite(path));
-		}
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, imgPaths);
 	}
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations)
 	{
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, spriteLocations);
+	}
+
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
+	{
+		for (std::string& path : imgPaths) {
+			multiFrames[stateName].push_back(new olc::Sprite(path));
+		}
+
+		frameDurations[stateName] = frameDuration;
+	}
+
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations)
+	{
 		for (olc::vi2d& location : spriteLocations) {
 			singleFrames[stateName].push_back(location);
 		}
+
+		frameDurations[stateName] = frameDuration;
 	}
 
 	void AnimatedSprite::SetSpriteSize(olc::vi2d size)
 	{
 		spriteSize = size;
+		if (placeholder != nullptr) {
+			delete placeholder;
+		}
+		placeholder = new olc::Sprite(size.x, size.y);
 	}
 
 	olc::vi2d AnimatedSprite::GetSpriteSize()
@@ -191,7 +228,8 @@ namespace olc
 	{
 		if (scale <= 0.0f) {
 			spriteScale = 1.0f;
-		} else {
+		}
+		else {
 			spriteScale = scale;
 		}
 	}
@@ -201,13 +239,12 @@ namespace olc
 		olc::GFX2D::Transform2D t;
 
 		if (flip == FLIP_MODE::HORIZONTAL) {
-			t.Translate(-((spriteSize.x / 2) * spriteScale), 0);
+			t.Translate(-spriteSize.x, 0);
 			t.Scale(-spriteScale, spriteScale);
 		} else if (flip == FLIP_MODE::VERTICAL) {
-			t.Translate(0, -((spriteSize.y / 2) * spriteScale));
+			t.Translate(0, -spriteSize.y);
 			t.Scale(spriteScale, -spriteScale);
-		}
-		else {
+		} else {
 			t.Scale(spriteScale, spriteScale);
 		}
 
@@ -217,12 +254,16 @@ namespace olc
 			olc::GFX2D::DrawSprite(GetMultiFrame(fElapsedTime), t);
 		}
 		else {
-			olc::Sprite* sprite = new olc::Sprite(spriteSize.x, spriteSize.y);
-			pge->SetDrawTarget(sprite);
+			olc::Pixel::Mode currentPixelMode = pge->GetPixelMode();
+			olc::Sprite* currentDrawTarget = pge->GetDrawTarget();
+
+			pge->SetDrawTarget(placeholder);
+			pge->Clear(olc::BLANK);
+			pge->SetPixelMode(olc::Pixel::NORMAL);
 			pge->DrawPartialSprite({ 0, 0 }, spriteSheet, GetSingleFrame(fElapsedTime), spriteSize);
-			pge->SetDrawTarget(nullptr);
-			olc::GFX2D::DrawSprite(sprite, t);
-			delete sprite;
+			pge->SetDrawTarget(currentDrawTarget);
+			pge->SetPixelMode(currentPixelMode);
+			olc::GFX2D::DrawSprite(placeholder, t);
 		}
 	}
 }
