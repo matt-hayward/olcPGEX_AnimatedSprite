@@ -83,7 +83,7 @@ namespace olc
 
 	public:
 		bool flipped = false;
-		int defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
+		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
 		enum class FLIP_MODE {
 			NONE = 0,
 			HORIZONTAL = 1,
