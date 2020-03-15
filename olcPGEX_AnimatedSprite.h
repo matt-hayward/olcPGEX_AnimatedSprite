@@ -70,19 +70,53 @@ namespace olc
 	class AnimatedSprite : public olc::PGEX
 	{
 	public:
+		bool flipped = false;
+		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
+		enum class FLIP_MODE {
+			NONE = 0,
+			HORIZONTAL = 1,
+			VERTICAL = 2
+		};
+		enum class SPRITE_MODE {
+			MULTI = 0,
+			SINGLE = 1
+		};
+		// Controls what happens when the animation reaches the last frame
+		enum class PLAY_MODE {
+			FORWARD = 0, // Restarts the animation from be begining when it reaches its last frame
+			PING_PONG = 1 // Reverses the animation's direction whenever reaches its last frame
+		};
+		FLIP_MODE flip = FLIP_MODE::NONE;
+		SPRITE_MODE mode = SPRITE_MODE::MULTI;
+		olc::Sprite* spriteSheet = nullptr;
+
+	protected:
+		std::string state;
+		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
+		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
+		std::map<std::string, float> frameDurations;
+		std::map<std::string, PLAY_MODE> playModes;
+
+		float frameTimer = 0.0f;
+		unsigned int currentFrame;
+		olc::vi2d spriteSize;
+		float spriteScale = 1.0f;
+		olc::Sprite* placeholder = nullptr;
+		bool playForward = true;
+	public:
 		// Set current state of sprite
 		void SetState(std::string newState);
 		// Get current sprite state
 		std::string GetState();
 		// Draw sprite
 		void Draw(float fElapsedTime, olc::vf2d position);
-		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration
-		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
-		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration
-		void AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations);
-		// Add state for sprite in SPRITE_MODE::MULTI using the default frameDuration
+		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration and playMode
+		void AddState(std::string stateName, float frameDuration, AnimatedSprite::PLAY_MODE playMode, std::vector<std::string> imagePaths);
+		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration  and playMode
+		void AddState(std::string stateName, float frameDuration, AnimatedSprite::PLAY_MODE playMode, std::vector<olc::vi2d> spriteLocations);
+		// Add state for sprite in SPRITE_MODE::MULTI using the default frameDuration and FORWARD playMode
 		void AddState(std::string stateName, std::vector<std::string> imagePaths);
-		// Add state for sprite in SPRITE_MODE::SINGLE using the default frameDuration
+		// Add state for sprite in SPRITE_MODE::SINGLE using the default frameDuration and FORWARD playMode
 		void AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations);
 		// Set size of sprite
 		void SetSpriteSize(olc::vi2d size);
@@ -95,32 +129,7 @@ namespace olc
 		olc::Sprite* GetMultiFrame(float fElapsedTime);
 		olc::vi2d GetSingleFrame(float fElapsedTime);
 
-	public:
-		bool flipped = false;
-		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
-		enum class FLIP_MODE {
-			NONE = 0,
-			HORIZONTAL = 1,
-			VERTICAL = 2
-		};
-		enum class SPRITE_MODE {
-			MULTI = 0,
-			SINGLE = 1
-		};
-		FLIP_MODE flip = FLIP_MODE::NONE;
-		SPRITE_MODE mode = SPRITE_MODE::MULTI;
-		olc::Sprite* spriteSheet = nullptr;
 
-	protected:
-		std::string state;
-		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
-		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
-		std::map<std::string, float> frameDurations;
-		float frameTimer = 0.0f;
-		unsigned int currentFrame;
-		olc::vi2d spriteSize;
-		float spriteScale = 1.0f;
-		olc::Sprite* placeholder = nullptr;
 	};
 }
 
@@ -134,12 +143,34 @@ namespace olc
 		frameTimer += fElapsedTime;
 
 		if (frameTimer >= frameDurations[state]) {
-			currentFrame++;
-			frameTimer = 0.0f;
+			if (playModes[state] == PLAY_MODE::PING_PONG && multiFrames[state].size() > 2) {
+				if (playForward) {
+					currentFrame++;
 
-			if (currentFrame >= multiFrames[state].size()) {
-				currentFrame = 0;
+					if (currentFrame >= multiFrames[state].size()) {
+						currentFrame = multiFrames[state].size() - 2;
+						playForward = !playForward;
+					}
+				}
+				else {
+					if (currentFrame == 0) {
+						currentFrame = 1;
+						playForward = !playForward;
+					}
+					else {
+						currentFrame--;
+					}
+				}
 			}
+			else {
+				currentFrame++;
+
+				if (currentFrame >= multiFrames[state].size()) {
+					currentFrame = 0;
+				}
+			}
+
+			frameTimer = 0.0f;
 		}
 
 		return multiFrames[state][currentFrame];
@@ -150,12 +181,34 @@ namespace olc
 		frameTimer += fElapsedTime;
 
 		if (frameTimer >= frameDurations[state]) {
-			currentFrame++;
-			frameTimer = 0.0f;
+			if (playModes[state] == PLAY_MODE::PING_PONG && singleFrames[state].size() > 2) {
+				if (playForward) {
+					currentFrame++;
 
-			if (currentFrame >= singleFrames[state].size()) {
-				currentFrame = 0;
+					if (currentFrame >= singleFrames[state].size()) {
+						currentFrame = singleFrames[state].size() - 2;
+						playForward = !playForward;
+					}
+				}
+				else {
+					if (currentFrame == 0) {
+						currentFrame = 1;
+						playForward = !playForward;
+					}
+					else {
+						currentFrame--;
+					}
+				}
 			}
+			else {
+				currentFrame++;
+
+				if (currentFrame >= singleFrames[state].size()) {
+					currentFrame = 0;
+				}
+			}
+
+			frameTimer = 0.0f;
 		}
 
 		return singleFrames[state][currentFrame];
@@ -176,7 +229,6 @@ namespace olc
 		}
 	}
 
-
 	std::string AnimatedSprite::GetState()
 	{
 		return state;
@@ -184,29 +236,31 @@ namespace olc
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<std::string> imgPaths)
 	{
-		AnimatedSprite::AddState(stateName, defaultFrameDuration, imgPaths);
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, PLAY_MODE::FORWARD, imgPaths);
 	}
 
 	void AnimatedSprite::AddState(std::string stateName, std::vector<olc::vi2d> spriteLocations)
 	{
-		AnimatedSprite::AddState(stateName, defaultFrameDuration, spriteLocations);
+		AnimatedSprite::AddState(stateName, defaultFrameDuration, PLAY_MODE::FORWARD, spriteLocations);
 	}
 
-	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, AnimatedSprite::PLAY_MODE playMode, std::vector<std::string> imgPaths)
 	{
 		for (std::string& path : imgPaths) {
 			multiFrames[stateName].push_back(new olc::Sprite(path));
 		}
 
+		playModes[stateName] = playMode;
 		frameDurations[stateName] = frameDuration;
 	}
 
-	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<olc::vi2d> spriteLocations)
+	void AnimatedSprite::AddState(std::string stateName, float frameDuration, AnimatedSprite::PLAY_MODE playMode, std::vector<olc::vi2d> spriteLocations)
 	{
 		for (olc::vi2d& location : spriteLocations) {
 			singleFrames[stateName].push_back(location);
 		}
 
+		playModes[stateName] = playMode;
 		frameDurations[stateName] = frameDuration;
 	}
 
