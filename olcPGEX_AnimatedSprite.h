@@ -60,8 +60,6 @@
 	0xnicholasc - https://github.com/0xnicholasc
 */
 
-#include "olcPGEX_Graphics2D.h"
-
 #ifndef OLC_PGEX_ANIMATEDSPRITE
 #define OLC_PGEX_ANIMATEDSPRITE
 
@@ -75,7 +73,7 @@ namespace olc
 		// Get current sprite state
 		std::string GetState();
 		// Draw sprite
-		void Draw(float fElapsedTime, olc::vf2d position);
+		void Draw(float fElapsedTime, olc::vf2d position, uint8_t flip = olc::Sprite::Flip::NONE);
 		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration
 		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
 		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration
@@ -96,18 +94,11 @@ namespace olc
 		olc::vi2d GetSingleFrame(float fElapsedTime);
 
 	public:
-		bool flipped = false;
 		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
-		enum class FLIP_MODE {
-			NONE = 0,
-			HORIZONTAL = 1,
-			VERTICAL = 2
-		};
 		enum class SPRITE_MODE {
 			MULTI = 0,
 			SINGLE = 1
 		};
-		FLIP_MODE flip = FLIP_MODE::NONE;
 		SPRITE_MODE mode = SPRITE_MODE::MULTI;
 		olc::Sprite* spriteSheet = nullptr;
 
@@ -234,36 +225,13 @@ namespace olc
 		}
 	}
 
-	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position)
+	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip)
 	{
-		olc::GFX2D::Transform2D t;
-
-		if (flip == FLIP_MODE::HORIZONTAL) {
-			t.Translate(-spriteSize.x, 0);
-			t.Scale(-spriteScale, spriteScale);
-		} else if (flip == FLIP_MODE::VERTICAL) {
-			t.Translate(0, -spriteSize.y);
-			t.Scale(spriteScale, -spriteScale);
-		} else {
-			t.Scale(spriteScale, spriteScale);
-		}
-
-		t.Translate(position.x, position.y);
-
 		if (mode == SPRITE_MODE::MULTI) {
-			olc::GFX2D::DrawSprite(GetMultiFrame(fElapsedTime), t);
+			pge->DrawSprite(position, GetMultiFrame(fElapsedTime), spriteScale, flip);
 		}
 		else {
-			olc::Pixel::Mode currentPixelMode = pge->GetPixelMode();
-			olc::Sprite* currentDrawTarget = pge->GetDrawTarget();
-
-			pge->SetDrawTarget(placeholder);
-			pge->Clear(olc::BLANK);
-			pge->SetPixelMode(olc::Pixel::NORMAL);
-			pge->DrawPartialSprite({ 0, 0 }, spriteSheet, GetSingleFrame(fElapsedTime), spriteSize);
-			pge->SetDrawTarget(currentDrawTarget);
-			pge->SetPixelMode(currentPixelMode);
-			olc::GFX2D::DrawSprite(placeholder, t);
+			pge->DrawPartialSprite(position, spriteSheet, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
 		}
 	}
 }
