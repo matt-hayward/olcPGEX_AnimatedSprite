@@ -73,6 +73,13 @@ namespace olc
 			sprite = new Sprite(spriteLocation);
 			decal = new Decal(sprite);
 		}
+		
+		Renderable(std::string spriteLocation, olc::ResourcePack *pack)
+		{
+			sprite = new Sprite(spriteLocation, pack);
+			decal = new Decal(sprite);
+		}
+
 		~Renderable() {
 			delete decal;
 			delete sprite;
