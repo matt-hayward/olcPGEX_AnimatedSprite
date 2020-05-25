@@ -73,6 +73,13 @@ namespace olc
 			sprite = new Sprite(spriteLocation);
 			decal = new Decal(sprite);
 		}
+		
+		Renderable(std::string spriteLocation, olc::ResourcePack* pack)
+		{
+			sprite = new Sprite(spriteLocation, pack);
+			decal = new Decal(sprite);
+		}
+
 		~Renderable() {
 			delete decal;
 			delete sprite;
@@ -91,7 +98,7 @@ namespace olc
 		// Get current sprite state
 		std::string GetState();
 		// Draw sprite
-		void Draw(float fElapsedTime, olc::vf2d position, uint8_t flip = olc::Sprite::Flip::NONE);
+		void Draw(float fElapsedTime, olc::vf2d position, uint8_t flip = olc::Sprite::Flip::NONE, olc::Pixel tint = olc::WHITE);
 		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration
 		void AddState(std::string stateName, float frameDuration, std::vector<std::string> imagePaths);
 		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration
@@ -280,20 +287,20 @@ namespace olc
 		}
 	}
 
-	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip)
+	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip, olc::Pixel tint)
 	{
 		if (mode == SPRITE_MODE::MULTI) {
 			if (type == SPRITE_TYPE::SPRITE) {
 				pge->DrawSprite(position, GetMultiFrame(fElapsedTime), spriteScale, flip);
 			} else {
-				pge->DrawDecal(GetDecalPosition(position, flip), GetMultiRenderable(fElapsedTime), GetDecalScale(flip));
+				pge->DrawDecal(GetDecalPosition(position, flip), GetMultiRenderable(fElapsedTime), GetDecalScale(flip), tint);
 			}
 		}
 		else {
 			if (type == SPRITE_TYPE::SPRITE) {
 				pge->DrawPartialSprite(position, spriteSheet->sprite, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
 			} else {
-				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip));
+				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip), tint);
 			}
 		}
 	}
