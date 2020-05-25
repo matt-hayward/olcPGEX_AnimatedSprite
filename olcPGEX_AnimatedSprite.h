@@ -65,6 +65,24 @@
 
 namespace olc
 {
+	class Renderable
+	{
+	public:
+		Renderable() = default;
+		Renderable(std::string spriteLocation) {
+			sprite = new Sprite(spriteLocation);
+			decal = new Decal(sprite);
+		}
+		~Renderable() {
+			delete decal;
+			delete sprite;
+		}
+
+	public:
+		olc::Sprite* sprite = nullptr;
+		olc::Decal* decal = nullptr;
+	};
+
 	class AnimatedSprite : public olc::PGEX
 	{
 	public:
@@ -91,7 +109,10 @@ namespace olc
 
 	protected:
 		olc::Sprite* GetMultiFrame(float fElapsedTime);
+		olc::Decal* GetMultiRenderable(float fElapsedTime);
 		olc::vi2d GetSingleFrame(float fElapsedTime);
+		olc::vf2d GetDecalScale(uint8_t flip);
+		olc::vf2d GetDecalPosition(olc::vf2d position, uint8_t flip);
 
 	public:
 		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
@@ -99,13 +120,19 @@ namespace olc
 			MULTI = 0,
 			SINGLE = 1
 		};
+		enum class SPRITE_TYPE {
+			SPRITE,
+			DECAL
+		};
 		SPRITE_MODE mode = SPRITE_MODE::MULTI;
-		olc::Sprite* spriteSheet = nullptr;
+		SPRITE_TYPE type = SPRITE_TYPE::SPRITE;
+		Renderable* spriteSheet;
 
 	protected:
 		std::string state;
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
+		std::map<std::string, std::vector<Renderable*>> multiRenderables;
 		std::map<std::string, float> frameDurations;
 		float frameTimer = 0.0f;
 		unsigned int currentFrame;
@@ -136,6 +163,22 @@ namespace olc
 		return multiFrames[state][currentFrame];
 	}
 
+	olc::Decal* AnimatedSprite::GetMultiRenderable(float fElapsedTime)
+	{
+		frameTimer += fElapsedTime;
+
+		if (frameTimer >= frameDurations[state]) {
+			currentFrame++;
+			frameTimer = 0.0f;
+
+			if (currentFrame >= multiRenderables[state].size()) {
+				currentFrame = 0;
+			}
+		}
+
+		return multiRenderables[state][currentFrame]->decal;
+	}
+
 	olc::vi2d AnimatedSprite::GetSingleFrame(float fElapsedTime)
 	{
 		frameTimer += fElapsedTime;
@@ -154,7 +197,15 @@ namespace olc
 
 	void AnimatedSprite::SetState(std::string newState)
 	{
-		if ((mode == SPRITE_MODE::MULTI && multiFrames.find(newState) == multiFrames.end())
+		bool stateFound = false;
+		if (type == SPRITE_TYPE::SPRITE) {
+			if ((mode == SPRITE_MODE::MULTI && multiFrames.find(newState) == multiFrames.end())
+				|| (mode == SPRITE_MODE::SINGLE && singleFrames.find(newState) == singleFrames.end())) {
+
+				std::cout << "Error: State " << newState << " does not exist." << std::endl;
+				return;
+			}
+		} else if ((mode == SPRITE_MODE::MULTI && multiRenderables.find(newState) == multiRenderables.end())
 			|| (mode == SPRITE_MODE::SINGLE && singleFrames.find(newState) == singleFrames.end())) {
 
 			std::cout << "Error: State " << newState << " does not exist." << std::endl;
@@ -186,7 +237,11 @@ namespace olc
 	void AnimatedSprite::AddState(std::string stateName, float frameDuration, std::vector<std::string> imgPaths)
 	{
 		for (std::string& path : imgPaths) {
-			multiFrames[stateName].push_back(new olc::Sprite(path));
+			if (type == SPRITE_TYPE::SPRITE) {
+				multiFrames[stateName].push_back(new olc::Sprite(path));
+			} else {
+				multiRenderables[stateName].push_back(new Renderable(path));
+			}
 		}
 
 		frameDurations[stateName] = frameDuration;
@@ -228,11 +283,47 @@ namespace olc
 	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip)
 	{
 		if (mode == SPRITE_MODE::MULTI) {
-			pge->DrawSprite(position, GetMultiFrame(fElapsedTime), spriteScale, flip);
+			if (type == SPRITE_TYPE::SPRITE) {
+				pge->DrawSprite(position, GetMultiFrame(fElapsedTime), spriteScale, flip);
+			} else {
+				pge->DrawDecal(GetDecalPosition(position, flip), GetMultiRenderable(fElapsedTime), GetDecalScale(flip));
+			}
 		}
 		else {
-			pge->DrawPartialSprite(position, spriteSheet, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
+			if (type == SPRITE_TYPE::SPRITE) {
+				pge->DrawPartialSprite(position, spriteSheet->sprite, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
+			} else {
+				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip));
+			}
 		}
+	}
+
+	olc::vf2d AnimatedSprite::GetDecalScale(uint8_t flip)
+	{
+		olc::vf2d scale = { (float)spriteScale, (float)spriteScale };
+
+		if (flip == olc::Sprite::Flip::HORIZ) {
+			return { -(scale.x), scale.y };
+		}
+		
+		if (flip == olc::Sprite::Flip::VERT) {
+			return { scale.x, -scale.y };
+		}
+
+		return scale;
+	}
+
+	olc::vf2d AnimatedSprite::GetDecalPosition(olc::vf2d position, uint8_t flip)
+	{
+		if (flip == olc::Sprite::Flip::HORIZ) {
+			return { position.x + (spriteSize.x * spriteScale), position.y };
+		}
+
+		if (flip == olc::Sprite::Flip::VERT) {
+			return { position.x, position.y + (spriteSize.y * spriteScale) };
+		}
+
+		return position;
 	}
 }
 
