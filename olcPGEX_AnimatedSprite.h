@@ -69,14 +69,8 @@ namespace olc
 	{
 	public:
 		Renderable() = default;
-		Renderable(std::string spriteLocation) {
-			sprite = new Sprite(spriteLocation);
-			decal = new Decal(sprite);
-		}
-		~Renderable() {
-			delete decal;
-			delete sprite;
-		}
+		Renderable(std::string spriteLocation);
+		~Renderable();
 
 	public:
 		olc::Sprite* sprite = nullptr;
@@ -154,6 +148,16 @@ namespace olc
 
 namespace olc
 {
+	Renderable::Renderable(std::string spriteLocation) {
+		sprite = new Sprite(spriteLocation);
+		decal = new Decal(sprite);
+	}
+
+	Renderable::~Renderable() {
+		delete decal;
+		delete sprite;
+	}
+
 	olc::Sprite* AnimatedSprite::GetMultiFrame(float fElapsedTime)
 	{
 		frameTimer += fElapsedTime;
@@ -189,8 +193,7 @@ namespace olc
 
 			if (playModes[state] == PLAY_MODE::PING_PONG && !playForward) {
 				currentFrame--;
-			}
-			else {
+			} else {
 				currentFrame++;
 			}
 
@@ -199,8 +202,7 @@ namespace olc
 					? 0
 					: multiRenderables[state].size() - 2;
 				playForward = false;
-			}
-			else if (currentFrame <= 0) {
+			} else if (currentFrame <= 0) {
 				playForward = true;
 			}
 		}
@@ -217,8 +219,7 @@ namespace olc
 
 			if (playModes[state] == PLAY_MODE::PING_PONG && !playForward) {
 				currentFrame--;
-			}
-			else {
+			} else {
 				currentFrame++;
 			}
 
@@ -227,8 +228,7 @@ namespace olc
 					? 0
 					: singleFrames[state].size() - 2;
 				playForward = false;
-			}
-			else if (currentFrame <= 0) {
+			} else if (currentFrame <= 0) {
 				playForward = true;
 			}
 		}
