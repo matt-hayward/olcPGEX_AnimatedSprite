@@ -23,6 +23,9 @@ The following code style guidelines should be adhered to:
     - Variables should use `camelCase`
     - Variable names used in both the OLC Pixel Game Engine and the AnimatedSprite extension (and for the same purpose) should match, including the use of Hungarian Notation. For example, `fElapsedTime`
 
+- **Pointers:**
+    - Pointers should be declared as `type* name`
+
 - **Braces:**
     - Opening braces for methods should be placed on a new line
     - Opening braces for control structures should be placed on the same line

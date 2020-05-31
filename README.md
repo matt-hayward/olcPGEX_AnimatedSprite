@@ -4,12 +4,6 @@ This extension is designed for use with the [olcPixelGameEngine](https://github.
 
 ---
 
-## Requirements
-
-The extension requires the [olcPGEX_Graphics2D](https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Extensions/olcPGEX_Graphics2D.h) extension to work, but should require no additional libraries beyond that and the olcPixelGameEngine itself.
-
----
-
 ## Usage
 
 To use the olcPGEX_AnimatedSprite extension, it needs to be included in your application. This is done like so:
@@ -29,7 +23,7 @@ bool OnUserCreate()
 {
     // configure the sprite:
     sprite.mode = olc::AnimatedSprite::SPRITE_MODE::SINGLE; // set sprite to use a single spritesheet
-    sprite.spriteSheet = new olc::Sprite("spritesheet.png"); // define image to use for the spritesheet
+    sprite.spriteSheet = new olc::Renderable("spritesheet.png"); // define image to use for the spritesheet
     sprite.SetSpriteSize({50, 50}); // define size of each sprite with an olc::vi2d
     sprite.SetSpriteScale(2.0f); // define scale of sprite; 1.0f is original size. Must be above 0 and defaults to 1.0f
 
@@ -94,14 +88,54 @@ bool OnUserUpdate(float fElapsedTime)
 }
 ```
 
-### Flipping Sprites
+### Customising Animations
 
-You may want to flip a sprite vertically or horizontally - for example, if your spritesheet only has right-facing images. This can be achieved by changing the flip mode, like so:
+The Animated Sprite PGEX supports two animation modes: loop and 'ping-pong'.
+
+In loop mode, when an animation reaches its final frame, it starts again from the first. This gives it the pattern of 123123123...
+
+In 'ping-pong' mode, when an animation reaches its final frame, it starts backwards until it reaches the first frame again, then goes back. This gives it the pattern of 12321232123...
+
+It is also possible to define the frame length of each animation. This determines the amount of time in seconds, a frame is displayed on screen before the next one is shown.
+
+Animation mode and frame duration are defined on a per-state basis, when the `AddState` method is called:
 
 ```cpp
-sprite.flip = olc::AnimatedSprite::FLIP_MODE::HORIZONTAL; // flip horizontally (e.g. make right-facing image face the left)
-sprite.flip = olc::AnimatedSprite::FLIP_MODE::VERTICAL; // flip vertically (e.g. make image upside down)
-sprite.flip = olc::AnimatedSprite::FLIP_MODE::NONE; // display original image
+sprite.AddState("foo", 2.0f, olc::AnimatedSprite::PLAY_MODE::LOOP, foo); // set each frame to display for two seconds, with the default - loop - play mode
+sprite.AddState("bar", 0.1f, olc::AnimatedSprite::PLAY_MODE::PING_PONG, bar); // set play mode to ping pong with default frame duration of 0.1 seconds
+```
+
+### Flipping Sprites
+
+You may want to flip a sprite vertically or horizontally - for example, if your spritesheet only has right-facing images. This can be achieved by passing in an `olc::Pixel::Flip` when drawing:
+
+```cpp
+sprite.Draw(fElapsedTime, {10.0f, 10.0f}, olc::Sprite::Flip::NONE); // no flip - default
+sprite.Draw(fElapsedTime, {10.0f, 10.0f}, olc::Sprite::Flip::HORIZ); // flip sprite horizontally
+sprite.Draw(fElapsedTime, {10.0f, 10.0f}, olc::Sprite::Flip::VERT); // flip sprite vertically
+```
+
+### Using Decals
+
+You can draw Decals rather than Sprites by setting the sprite type for your animated sprite:
+
+```cpp
+olc::AnimatedSprite sprite;
+
+sprite.type = olc::AnimatedSprite::SPRITE_TYPE::SPRITE; // set animated sprite to draw sprites, the default behaviour
+sprite.type = olc::AnimatedSprite::SPRITE_TYPE::DECAL; // set animated sprite to draw decals
+```
+
+**NOTE:** If using decals, you must define the states after the Pixel Game Engine has fully loaded to ensure that the decals are correctly initialised. As such, you should do this in the `OnUserCreate` method of your PGE-derived class.
+
+### Tinting Decals
+
+The `olc::AnimatedSprite::Draw()` method accepts an optional `olc::Pixel` parameter which will tint the sprite in the specified colour. **Note:** This only works for decals.
+
+```cpp
+// assuming sprite is using decals...
+sprite.Draw(fElapsedTime, {10.0f, 10.0f}, olc::Sprite::Flip::NONE, olc::WHITE); // draw sprite with default white tinting (no tinting)
+sprite.Draw(fElapsedTime, {10.0f, 10.0f}, olc::Sprite::Flip::NONE, olc::CYAN); // draw sprite with cyan tinting
 ```
 
 ---
