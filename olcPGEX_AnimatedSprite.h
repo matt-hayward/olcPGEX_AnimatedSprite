@@ -3,7 +3,7 @@
 
 	+-------------------------------------------------------------+
 	|         OneLoneCoder Pixel Game Engine Extension            |
-	|                AnimatedSprites - v1.1.0			              |
+	|                AnimatedSprites - v2.0.0			              |
 	+-------------------------------------------------------------+
 
 	What is this?
@@ -58,6 +58,7 @@
 	Contributors
 	~~~~~~~~~~~~
 	0xnicholasc - https://github.com/0xnicholasc
+	Moros1138 - https://github.com/Moros1138
 */
 
 #ifndef OLC_PGEX_ANIMATEDSPRITE
@@ -99,7 +100,7 @@ namespace olc
 		// Get current sprite state
 		std::string GetState();
 		// Draw sprite
-		void Draw(float fElapsedTime, olc::vf2d position, uint8_t flip = olc::Sprite::Flip::NONE);
+		void Draw(float fElapsedTime, olc::vf2d position, uint8_t flip = olc::Sprite::Flip::NONE, olc::Pixel tint = olc::WHITE);
 		// Add state for sprite in SPRITE_MODE::MULTI with a specified frameDuration and playMode
 		void AddState(std::string stateName, float frameDuration, PLAY_MODE mode, std::vector<std::string> imagePaths);
 		// Add state for sprite in SPRITE_MODE::SINGLE with a specified frameDuration and playMode
@@ -323,20 +324,20 @@ namespace olc
 		}
 	}
 
-	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip)
+	void AnimatedSprite::Draw(float fElapsedTime, olc::vf2d position, uint8_t flip, olc::Pixel tint)
 	{
 		if (mode == SPRITE_MODE::MULTI) {
 			if (type == SPRITE_TYPE::SPRITE) {
 				pge->DrawSprite(position, GetMultiFrame(fElapsedTime), spriteScale, flip);
 			} else {
-				pge->DrawDecal(GetDecalPosition(position, flip), GetMultiRenderable(fElapsedTime), GetDecalScale(flip));
+				pge->DrawDecal(GetDecalPosition(position, flip), GetMultiRenderable(fElapsedTime), GetDecalScale(flip), tint);
 			}
 		}
 		else {
 			if (type == SPRITE_TYPE::SPRITE) {
 				pge->DrawPartialSprite(position, spriteSheet->sprite, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
 			} else {
-				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip));
+				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip), tint);
 			}
 		}
 	}
