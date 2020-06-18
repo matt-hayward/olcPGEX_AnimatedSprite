@@ -66,18 +66,6 @@
 
 namespace olc
 {
-	class Renderable
-	{
-	public:
-		Renderable() = default;
-		Renderable(std::string spriteLocation);
-		~Renderable();
-
-	public:
-		olc::Sprite* sprite = nullptr;
-		olc::Decal* decal = nullptr;
-	};
-
 	class AnimatedSprite : public olc::PGEX
 	{
 	public:
@@ -149,16 +137,6 @@ namespace olc
 
 namespace olc
 {
-	Renderable::Renderable(std::string spriteLocation) {
-		sprite = new Sprite(spriteLocation);
-		decal = new Decal(sprite);
-	}
-
-	Renderable::~Renderable() {
-		delete decal;
-		delete sprite;
-	}
-
 	olc::Sprite* AnimatedSprite::GetMultiFrame(float fElapsedTime)
 	{
 		frameTimer += fElapsedTime;
@@ -208,7 +186,7 @@ namespace olc
 			}
 		}
 
-		return multiRenderables[state][currentFrame]->decal;
+		return multiRenderables[state][currentFrame]->Decal();
 	}
 
 	olc::vi2d AnimatedSprite::GetSingleFrame(float fElapsedTime)
@@ -282,7 +260,8 @@ namespace olc
 			if (type == SPRITE_TYPE::SPRITE) {
 				multiFrames[stateName].push_back(new olc::Sprite(path));
 			} else {
-				multiRenderables[stateName].push_back(new Renderable(path));
+				multiRenderables[stateName].push_back(new Renderable());
+				multiRenderables[stateName].back()->Load(path);
 			}
 		}
 
@@ -335,9 +314,9 @@ namespace olc
 		}
 		else {
 			if (type == SPRITE_TYPE::SPRITE) {
-				pge->DrawPartialSprite(position, spriteSheet->sprite, GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
+				pge->DrawPartialSprite(position, spriteSheet->Sprite(), GetSingleFrame(fElapsedTime), spriteSize, spriteScale, flip);
 			} else {
-				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->decal, GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip), tint);
+				pge->DrawPartialDecal(GetDecalPosition(position, flip), spriteSheet->Decal(), GetSingleFrame(fElapsedTime), spriteSize, GetDecalScale(flip), tint);
 			}
 		}
 	}
