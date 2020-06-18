@@ -66,17 +66,20 @@
 
 namespace olc
 {
-	class Renderable
+	namespace AnimSprite
 	{
-	public:
-		Renderable() = default;
-		Renderable(std::string spriteLocation);
-		~Renderable();
+		class Renderable
+		{
+		public:
+			Renderable() = default;
+			Renderable(std::string spriteLocation);
+			~Renderable();
 
-	public:
-		olc::Sprite* sprite = nullptr;
-		olc::Decal* decal = nullptr;
-	};
+		public:
+			olc::Sprite* sprite = nullptr;
+			olc::Decal* decal = nullptr;
+		};
+	}
 
 	class AnimatedSprite : public olc::PGEX
 	{
@@ -127,13 +130,13 @@ namespace olc
 		float defaultFrameDuration = 0.1f; // Frame duration to be used if one is not specified otherwise
 		SPRITE_MODE mode = SPRITE_MODE::MULTI;
 		SPRITE_TYPE type = SPRITE_TYPE::SPRITE;
-		Renderable* spriteSheet;
+		AnimSprite::Renderable* spriteSheet;
 
 	protected:
 		std::string state;
 		std::map<std::string, std::vector<olc::Sprite*>> multiFrames;
 		std::map<std::string, std::vector<olc::vi2d>> singleFrames;
-		std::map<std::string, std::vector<Renderable*>> multiRenderables;
+		std::map<std::string, std::vector<AnimSprite::Renderable*>> multiRenderables;
 		std::map<std::string, float> frameDurations;
 		std::map<std::string, PLAY_MODE> playModes;
 		float frameTimer = 0.0f, spriteScale = 1.0f;
@@ -149,14 +152,16 @@ namespace olc
 
 namespace olc
 {
-	Renderable::Renderable(std::string spriteLocation) {
-		sprite = new Sprite(spriteLocation);
-		decal = new Decal(sprite);
-	}
+	namespace AnimSprite {
+		Renderable::Renderable(std::string spriteLocation) {
+			sprite = new Sprite(spriteLocation);
+			decal = new Decal(sprite);
+		}
 
-	Renderable::~Renderable() {
-		delete decal;
-		delete sprite;
+		Renderable::~Renderable() {
+			delete decal;
+			delete sprite;
+		}
 	}
 
 	olc::Sprite* AnimatedSprite::GetMultiFrame(float fElapsedTime)
@@ -282,7 +287,7 @@ namespace olc
 			if (type == SPRITE_TYPE::SPRITE) {
 				multiFrames[stateName].push_back(new olc::Sprite(path));
 			} else {
-				multiRenderables[stateName].push_back(new Renderable(path));
+				multiRenderables[stateName].push_back(new AnimSprite::Renderable(path));
 			}
 		}
 
