@@ -22,8 +22,10 @@ olc::AnimatedSprite sprite;
 bool OnUserCreate()
 {
     // configure the sprite:
+    olc::Renderable spritesheet = new olc::Renderable();
+    spritesheet.Load("spritesheet.png");
     sprite.mode = olc::AnimatedSprite::SPRITE_MODE::SINGLE; // set sprite to use a single spritesheet
-    sprite.spriteSheet = new olc::Renderable("spritesheet.png"); // define image to use for the spritesheet
+    sprite.spriteSheet = spritesheet; // define image to use for the spritesheet
     sprite.SetSpriteSize({50, 50}); // define size of each sprite with an olc::vi2d
     sprite.SetSpriteScale(2.0f); // define scale of sprite; 1.0f is original size. Must be above 0 and defaults to 1.0f
 
